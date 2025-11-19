@@ -46,7 +46,7 @@ function configurarLogin() {
 
             modal.classList.add('hidden');
             atualizarInterfaceUsuario();
-            
+
             alert(`Bem-vindo, ${usuarioLogado.nome_usuario}!`);
 
         } catch (erro) {
@@ -69,7 +69,6 @@ function atualizarInterfaceUsuario() {
             <div class="profile-card">
                 <img src="./images/${usuarioLogado.imagem}" alt="Avatar">
                 <h3>@${usuarioLogado.nome_usuario}</h3>
-                <p>${usuarioLogado.nome}</p>
 
                 <div class="profile-stats">
                     <div class="stat-item">
@@ -82,6 +81,15 @@ function atualizarInterfaceUsuario() {
                     </div>
                 </div>
             </div>
+            <footer class="main-footer">
+                <span>SAEPSaúde</span>
+                <div class="footer-icons">
+                    <img src="./images/instagram.svg" alt="Instagram">
+                    <img src="./images/tiktok.svg" alt="Facebook">
+                    <img src="./images/twitter.svg" alt="Twitter">
+                </div>
+                <p>Copyright - 2025/2026</p>
+            </footer>
         `;
 
     } else {
@@ -91,10 +99,28 @@ function atualizarInterfaceUsuario() {
 
         sidebarContainer.innerHTML = `
             <div class="profile-card">
-                <img src="./images/saepsaude.png" alt="Logo SAEPSaúde">
-                <h3>@saepsaude</h3>
-                <p>SAEPSaúde</p>
+                <img src="./images/SAEPSaude.png" alt="Avatar do Usuário">
+                <h3>SAEPSaúde</h3>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span>Atividades</span>
+                        <strong>12</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Calorias</span>
+                        <strong>3500</strong>
+                    </div>
+                </div>
             </div>
+            <footer class="main-footer">
+                <span>SAEPSaúde</span>
+                <div class="footer-icons">
+                    <img src="./images/instagram.svg" alt="Instagram">
+                    <img src="./images/tiktok.svg" alt="Facebook">
+                    <img src="./images/twitter.svg" alt="Twitter">
+                </div>
+                <p>Copyright - 2025/2026</p>
+            </footer>
         `;
     }
 }
@@ -106,14 +132,14 @@ function fazerLogout() {
 }
 
 async function carregarAtividades(pagina) {
-    
+
     const container = document.getElementById('activity-list');
     container.innerHTML = '<p>Carregando atividades...</p>';
 
     try {
 
         const response = await fetch(`/atividades?pagina=${pagina}`);
-        
+
         if (!response.ok) {
             throw new Error('Falha ao buscar dados do servidor.');
         }
@@ -122,13 +148,13 @@ async function carregarAtividades(pagina) {
         const atividades = data.atividades;
         const totalPaginas = data.totalPaginas;
 
-        container.innerHTML = ''; 
+        container.innerHTML = '';
 
         for (const atividade of atividades) {
             const distKM = atividade.distancia_percorrida / 1000;
             const duracaoFormatada = formatarDuracao(atividade.duracao_atividade);
             const dataFormatada = formatarData(atividade.createdat);
-            const autor = atividade.usuario_id; 
+            const autor = atividade.usuario_id;
 
             const cardHTML = `
                 <article class="activity-card">
@@ -169,11 +195,11 @@ function renderizarPaginacao(totalPaginas, paginaAtual) {
     const btnAnterior = document.createElement('button');
     btnAnterior.innerText = 'Anterior';
 
-    btnAnterior.disabled = (paginaAtual === 1); 
-    
+    btnAnterior.disabled = (paginaAtual === 1);
+
     btnAnterior.addEventListener('click', () => {
 
-        if (paginaAtual > 1) { 
+        if (paginaAtual > 1) {
             carregarAtividades(paginaAtual - 1);
         }
     });
@@ -182,13 +208,13 @@ function renderizarPaginacao(totalPaginas, paginaAtual) {
     for (let i = 1; i <= totalPaginas; i++) {
         const btnPagina = document.createElement('button');
         btnPagina.innerText = i;
-        
+
         if (i === paginaAtual) {
             btnPagina.classList.add('active');
         }
-        
-        btnPagina.dataset.pagina = i; 
-        
+
+        btnPagina.dataset.pagina = i;
+
         btnPagina.addEventListener('click', (evento) => {
             const paginaClicada = parseInt(evento.currentTarget.dataset.pagina);
             carregarAtividades(paginaClicada);
@@ -199,11 +225,11 @@ function renderizarPaginacao(totalPaginas, paginaAtual) {
     const btnProximo = document.createElement('button');
     btnProximo.innerText = 'Próximo';
 
-    btnProximo.disabled = (paginaAtual >= totalPaginas); 
+    btnProximo.disabled = (paginaAtual >= totalPaginas);
 
     btnProximo.addEventListener('click', () => {
 
-        if (paginaAtual < totalPaginas) { 
+        if (paginaAtual < totalPaginas) {
             carregarAtividades(paginaAtual + 1);
         }
     });
