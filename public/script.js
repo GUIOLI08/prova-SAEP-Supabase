@@ -6,7 +6,7 @@ const mainContent = document.getElementById('main-content'); // Elemento <main i
 // ----------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Começa renderizando o feed de atividades na main
+    // 1. Começa renderizando o feed de atividades
     renderizarMainAtividades(1); 
     // 2. Configura a lógica inicial de login (modal e o primeiro btn do header)
     configurarLogin();
@@ -156,9 +156,9 @@ function atualizarInterfaceUsuario() {
         const openRegistroBtn = document.getElementById('open-registro-btn');
         if (openRegistroBtn) {
              openRegistroBtn.addEventListener('click', () => {
-                // Chama a função para renderizar a nova tela
-                renderizarMainGerenciamento(); 
-            });
+                 // Chama a função para renderizar a nova tela
+                 renderizarMainGerenciamento(); 
+             });
         }
 
 
@@ -256,13 +256,53 @@ async function renderizarMainAtividades(pagina = 1) {
     }
 }
 
+// 💥 FUNÇÃO CORRIGIDA 💥
 function renderizarPaginacao(totalPaginas, paginaAtual) {
     const container = document.getElementById('pagination-controls');
     if (!container) return; 
     
     container.innerHTML = '';
-    // Lógica da paginação... (mantida do seu código)
-    // ...
+    
+    // 1. Cria o botão 'Anterior'
+    if (paginaAtual > 1) {
+        const prevBtn = document.createElement('button');
+        prevBtn.innerText = 'Anterior';
+        prevBtn.classList.add('page-btn'); // Adicione uma classe para estilização
+        prevBtn.addEventListener('click', () => {
+            renderizarMainAtividades(paginaAtual - 1)
+            window.scrollTo(0, 0); // Opcional: Rola para o topo da página ao mudar
+        });
+        container.appendChild(prevBtn);
+    }
+
+    // 2. Cria os botões de página (1, 2, 3...)
+    for (let i = 1; i <= totalPaginas; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.innerText = i;
+        pageBtn.classList.add('page-btn');
+        
+        if (i === paginaAtual) {
+            pageBtn.classList.add('active'); // Destaca a página atual
+        }
+        
+        pageBtn.addEventListener('click', () => {
+            renderizarMainAtividades(i);
+            window.scrollTo(0, 0); // Opcional: Rola para o topo da página ao mudar
+        });
+        container.appendChild(pageBtn);
+    }
+
+    // 3. Cria o botão 'Próximo'
+    if (paginaAtual < totalPaginas) {
+        const nextBtn = document.createElement('button');
+        nextBtn.innerText = 'Próximo';
+        nextBtn.classList.add('page-btn'); // Adicione uma classe para estilização
+        nextBtn.addEventListener('click', () => {
+            renderizarMainAtividades(paginaAtual + 1)
+            window.scrollTo(0, 0); // Opcional: Rola para o topo da página ao mudar
+        });
+        container.appendChild(nextBtn);
+    }
 }
 
 
