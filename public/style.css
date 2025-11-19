@@ -211,12 +211,6 @@ body {
     background-color: var(--roxo);
 }
 
-.pagination-container button:disabled {
-    border-color: #555;
-    color: #555;
-    cursor: not-allowed;
-}
-
 .hidden {
     display: none !important;
 }
