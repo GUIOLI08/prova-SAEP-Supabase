@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
@@ -32,10 +32,12 @@
             </form>
         </div>
     </div>
+
     <div class="layout-container">
+
         <aside class="sidebar">
             <div class="profile-card">
-                <img src="./images/SAEPSaude.png" alt="Avatar do Usuário">
+                <img src="./images/SAEPSaude.png" alt="Avatar do Usuário" id="logo-header-btn">
                 <h3>SAEPSaúde</h3>
                 <div class="profile-stats">
                     <div class="stat-item">
@@ -59,8 +61,7 @@
             </footer>
         </aside>
 
-        <main class="main-feed">
-
+        <main class="main-feed" id="main-content">
             <header class="main-header">
                 <h2>Atividades Recentes</h2>
                 <button id="login-button">Login</button>
@@ -72,43 +73,34 @@
                 <button>Trilha</button>
             </div>
 
-            <section id="activity-list">
+            <section id="activity-list" class="feed-list">
                 <article class="activity-card">
-
                     <div class="card-header">
                         <div class="user-info">
                             <img src="./images/usuario01.jpg" alt="Avatar">
                             <span>@usuario01</span>
                         </div>
-
                         <span class="card-date">14/08/2024 19:15</span>
                     </div>
-
                     <h4>Corrida</h4>
-
                     <div class="card-stats">
                         <p>Distância: <strong>5 km</strong></p>
                         <p>Duração: <strong>30 min</strong></p>
                         <p>Calorias: <strong>300 kcal</strong></p>
                     </div>
-
                     <div class="card-footer">
-                        <button class="icon-button">
-                            <img src="./images/coracao.svg" alt="Like">
-                        </button>
-                        <button class="icon-button">
-                            <img src="./images/comentario.svg" alt="Comentar">
-                        </button>
+                        <button class="icon-button"><img src="./images/coracao.svg" alt="Like"></button>
+                        <button class="icon-button"><img src="./images/comentario.svg" alt="Comentar"></button>
                     </div>
                 </article>
             </section>
+
             <div id="pagination-controls" class="pagination-container">
             </div>
 
         </main>
-
     </div>
-    <script defer src="app.js" type="module"></script>
+
     <script src="script.js"></script>
 </body>
 

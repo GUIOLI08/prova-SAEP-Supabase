@@ -13,7 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-    console.log('➡️\tEntrando na rota principal');
+    console.log('➡️\t Entrando na rota principal');
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -60,12 +60,44 @@ app.get('/atividades', async (req, res) => {
     });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/atividades', async (req, res) => {
+    // Dados esperados do frontend
+    const { tipo_atividade, distancia_percorrida, duracao_atividade, quantidade_calorias, usuario_id } = req.body;
+
+    console.log(`➡️\t Tentativa de registro de nova atividade para o usuário ${usuario_id}`);
     
+    // Objeto de dados para inserção, garantindo a conversão para inteiro
+    const novaAtividade = {
+        tipo_atividade,
+        distancia_percorrida: parseInt(distancia_percorrida), 
+        duracao_atividade: parseInt(duracao_atividade),
+        quantidade_calorias: parseInt(quantidade_calorias),
+        usuario_id: parseInt(usuario_id) 
+    };
+
+    // Inserir no Supabase
+    const { data, error } = await supabase
+        .from('atividades')
+        .insert([novaAtividade]); // Supabase espera um array para inserção
+
+    if (error) {
+        console.error('❌ Erro ao registrar atividade:', error);
+        // Retorna 500 para indicar falha no servidor/BD
+        return res.status(500).json({ erro: "Falha ao registrar atividade no banco de dados.", detalhes: error.message });
+    }
+
+    console.log(`✅ Atividade registrada com sucesso: ${tipo_atividade}`);
+    // Retorna 201 Created para indicar sucesso na criação do recurso
+    res.status(201).json({ mensagem: "Atividade registrada com sucesso!" });
+});
+
+app.post('/login', async (req, res) => {
+
     const { email, senha } = req.body;
 
     console.log(`Tentativa de login: ${email}`);
 
+    // 1. Busca o usuário
     const { data: usuario, error } = await supabase
         .from('usuarios')
         .select('*')
@@ -77,6 +109,7 @@ app.post('/login', async (req, res) => {
         return res.status(401).json({ erro: "Email ou senha inválidos" });
     }
 
+    // 2. Busca e calcula os stats do usuário logado
     const { data: atividades } = await supabase
         .from('atividades')
         .select('quantidade_calorias')
@@ -90,6 +123,7 @@ app.post('/login', async (req, res) => {
         totalCalorias = atividades.reduce((acc, curr) => acc + curr.quantidade_calorias, 0);
     }
 
+    // 3. Retorna os dados do usuário + stats
     res.status(200).json({
         ...usuario,
         stats: {
@@ -99,6 +133,40 @@ app.post('/login', async (req, res) => {
     });
 });
 
+app.get('/minhas-atividades', async (req, res) => {
+    const usuarioId = req.query.usuarioId;
+
+    if (!usuarioId) {
+        return res.status(400).send({ erro: "ID do usuário é obrigatório." });
+    }
+
+    try {
+        const { data: atividades, error } = await supabase
+            .from('atividades')
+            .select(`
+                *,
+                usuario_id ( nome_usuario, imagem )
+            `)
+            .eq('usuario_id', usuarioId)
+            // Certifique-se de que o campo 'createdat' ou 'createdAt' existe no seu BD e use-o
+            .order('createdat', { ascending: false }); 
+
+        if (error) {
+            console.error('Erro ao buscar atividades do usuário:', error.message);
+            return res.status(500).send(error);
+        }
+
+        res.status(200).json(atividades);
+
+    } catch (e) {
+        console.error('Erro de servidor:', e);
+        res.status(500).send({ erro: 'Erro interno do servidor.' });
+    }
+});
+
+// ----------------------------------------------------------------------
+// ROTA DE TESTE (Mantida)
+// ----------------------------------------------------------------------
 app.get('/testar-db', async (req, res) => {
 
     console.log("➡️\t Testando conexão com o banco consultando a tabela 'usuarios' ...");
