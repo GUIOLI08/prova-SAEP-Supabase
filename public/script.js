@@ -1,6 +1,109 @@
+let usuarioLogado = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     carregarAtividades(1);
+    configurarLogin();
 });
+
+function configurarLogin() {
+    const modal = document.getElementById('login-modal');
+    const btnLoginHeader = document.getElementById('login-button'); // Botão no topo
+    const btnClose = document.getElementById('close-modal-btn');
+    const form = document.getElementById('login-form');
+
+    btnLoginHeader.addEventListener('click', () => {
+        if (usuarioLogado) {
+            fazerLogout();
+        } else {
+            modal.classList.remove('hidden');
+        }
+    });
+
+    btnClose.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, senha })
+            });
+
+            if (!response.ok) {
+                alert('Email ou senha incorretos!');
+                return;
+            }
+
+            const dadosUsuario = await response.json();
+            usuarioLogado = dadosUsuario;
+
+            modal.classList.add('hidden');
+            atualizarInterfaceUsuario();
+            
+            alert(`Bem-vindo, ${usuarioLogado.nome_usuario}!`);
+
+        } catch (erro) {
+            console.error(erro);
+            alert('Erro ao tentar fazer login.');
+        }
+    });
+}
+
+function atualizarInterfaceUsuario() {
+    const btnLoginHeader = document.getElementById('login-button');
+    const sidebarContainer = document.querySelector('.sidebar');
+
+    if (usuarioLogado) {
+
+        btnLoginHeader.innerText = "Sair";
+        btnLoginHeader.style.backgroundColor = "#d9534f";
+
+        sidebarContainer.innerHTML = `
+            <div class="profile-card">
+                <img src="./images/${usuarioLogado.imagem}" alt="Avatar">
+                <h3>@${usuarioLogado.nome_usuario}</h3>
+                <p>${usuarioLogado.nome}</p>
+
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span>Atividades</span>
+                        <strong>${usuarioLogado.stats.totalAtividades}</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Calorias</span>
+                        <strong>${usuarioLogado.stats.totalCalorias}</strong>
+                    </div>
+                </div>
+            </div>
+        `;
+
+    } else {
+
+        btnLoginHeader.innerText = "Login";
+        btnLoginHeader.style.backgroundColor = "#483DAD";
+
+        sidebarContainer.innerHTML = `
+            <div class="profile-card">
+                <img src="./images/saepsaude.png" alt="Logo SAEPSaúde">
+                <h3>@saepsaude</h3>
+                <p>SAEPSaúde</p>
+            </div>
+        `;
+    }
+}
+
+function fazerLogout() {
+    usuarioLogado = null;
+    atualizarInterfaceUsuario();
+    alert("Você saiu da conta.");
+}
 
 async function carregarAtividades(pagina) {
     

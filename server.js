@@ -17,13 +17,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Em app.js (seu servidor)
-
-// ...
-
-// ----------------------------------------------------
-// ROTA /atividades (VERSÃO "FOFOQUEIRA")
-// ----------------------------------------------------
 app.get('/atividades', async (req, res) => {
     
     console.log("➡️\t Buscando atividades e colocando em páginas");
@@ -64,6 +57,45 @@ app.get('/atividades', async (req, res) => {
     res.status(200).send({
         atividades: atividades,
         totalPaginas: totalPaginas
+    });
+});
+
+app.post('/login', async (req, res) => {
+    
+    const { email, senha } = req.body;
+
+    console.log(`Tentativa de login: ${email}`);
+
+    const { data: usuario, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('email', email)
+        .eq('senha', senha)
+        .single();
+
+    if (error || !usuario) {
+        return res.status(401).json({ erro: "Email ou senha inválidos" });
+    }
+
+    const { data: atividades } = await supabase
+        .from('atividades')
+        .select('quantidade_calorias')
+        .eq('usuario_id', usuario.id);
+
+    let totalAtividades = 0;
+    let totalCalorias = 0;
+
+    if (atividades) {
+        totalAtividades = atividades.length;
+        totalCalorias = atividades.reduce((acc, curr) => acc + curr.quantidade_calorias, 0);
+    }
+
+    res.status(200).json({
+        ...usuario,
+        stats: {
+            totalAtividades,
+            totalCalorias
+        }
     });
 });
 
