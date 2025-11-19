@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAEPSaúde</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="layout-container">
+
+        <aside class="sidebar">
+            <div class="profile-card">
+                <img src="./images/SAEPSaude.png" alt="Avatar do Usuário">
+                <h3>SAEPSaúde</h3>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span>Atividades</span>
+                        <strong>12</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Calorias</span>
+                        <strong>3500</strong>
+                    </div>
+                </div>
+            </div>
+            <footer class="main-footer">
+                <span>SAEPSaúde</span>
+                <div class="footer-icons">
+                    <img src="./images/instagram.svg" alt="Instagram">
+                    <img src="./images/tiktok.svg" alt="Facebook">
+                    <img src="./images/twitter.svg" alt="Twitter">
+                </div>
+                <p>Copyright - 2025/2026</p>
+            </footer>
+        </aside>
+
+        <main class="main-feed">
+
+            <header class="main-header">
+                <h2>Atividades Recentes</h2>
+                <button id="login-button">Login</button>
+            </header>
+
+            <div class="filters">
+                <button>Corrida</button>
+                <button>Caminhada</button>
+                <button>Trilha</button>
+            </div>
+
+            <section id="activity-list">
+                <article class="activity-card">
+
+                    <div class="card-header">
+                        <div class="user-info">
+                            <img src="./images/usuario01.jpg" alt="Avatar">
+                            <span>@usuario01</span>
+                        </div>
+
+                        <span class="card-date">14/08/2024 19:15</span>
+                    </div>
+
+                    <h4>Corrida</h4>
+
+                    <div class="card-stats">
+                        <p>Distância: <strong>5 km</strong></p>
+                        <p>Duração: <strong>30 min</strong></p>
+                        <p>Calorias: <strong>300 kcal</strong></p>
+                    </div>
+
+                    <div class="card-footer">
+                        <button class="icon-button">
+                            <img src="./images/coracao.svg" alt="Like">
+                        </button>
+                        <button class="icon-button">
+                            <img src="./images/comentario.svg" alt="Comentar">
+                        </button>
+                    </div>
+                </article>
+            </section>
+            <div id="pagination-controls" class="pagination-container">
+                </div>
+
+        </main>
+
+    </div>
+    <script defer src="app.js" type="module"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
