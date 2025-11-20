@@ -1,20 +1,39 @@
+// ==================================================================
+// SEÇÃO 1: A MEMÓRIA DO SITE (Variáveis Globais)
+// ==================================================================
+// Imagine que aqui são "caixas" onde guardamos informações temporárias
+// enquanto a pessoa navega na página.
+
+// 'usuarioLogado': Se a pessoa entrar com senha, guardamos os dados dela aqui (nome, foto).
+// Se estiver 'null', o site sabe que é apenas um visitante anônimo.
 let usuarioLogado = null;
+
+// 'filtroAtual': Guarda se a pessoa clicou para ver apenas "Corrida", "Caminhada", etc.
 let filtroAtual = null; 
 
+// 'mainContent': É o palco principal da tela onde vamos desenhar e apagar coisas.
 const mainContent = document.getElementById('main-content');
 
 
+// ==================================================================
+// SEÇÃO 2: O PONTO DE PARTIDA
+// ==================================================================
+// Este comando diz: "Assim que a página terminar de carregar, faça isso imediatamente:"
 document.addEventListener('DOMContentLoaded', () => {
-    renderizarMainAtividades(1);
-    configurarListenerLogo();
+    renderizarMainAtividades(1); // 1. Desenhe o feed de atividades na página 1.
+    configurarListenerLogo();    // 2. Configure o botão da logo no topo.
 });
 
+// Função que configura a Logo do site.
+// Objetivo: Se alguém clicar na logo, o site "reseta" (limpa filtros e volta pra página inicial).
 function configurarListenerLogo() {
     const logoButton = document.getElementById('logo-header-btn');
     if (logoButton) {
+        // (Técnica para garantir que o botão não tenha comandos duplicados)
         const novoLogo = logoButton.cloneNode(true);
         logoButton.parentNode.replaceChild(novoLogo, logoButton);
         
+        // Ação: Ao clicar, limpa o filtro e recarrega a lista.
         novoLogo.addEventListener('click', () => {
             filtroAtual = null; 
             renderizarMainAtividades(1);
@@ -22,44 +41,62 @@ function configurarListenerLogo() {
     }
 }
 
+
+// ==================================================================
+// SEÇÃO 3: O FILTRO DE ATIVIDADES
+// ==================================================================
+// Funciona como um interruptor.
+// Se clicar em "Corrida" e já estiver em "Corrida", ele desliga o filtro (mostra tudo).
+// Se clicar em um novo, ele liga esse novo filtro.
 window.filtrarAtividades = function(tipo) {
     if (filtroAtual === tipo) {
-        filtroAtual = null;
+        filtroAtual = null; // Desliga
     } else {
-        filtroAtual = tipo;
+        filtroAtual = tipo; // Liga novo filtro
     }
+    // Depois de mudar a chave, manda redesenhar a tela com a nova regra.
     renderizarMainAtividades(1);
 }
 
+
+// ==================================================================
+// SEÇÃO 4: SISTEMA DE LOGIN (Entrada do Usuário)
+// ==================================================================
+// Gerencia a janelinha (modal) onde a pessoa digita e-mail e senha.
 function configurarLogin() {
+    // Identifica os elementos da tela (botões e formulários)
     const modal = document.getElementById('login-modal');
     const btnLoginHeader = document.getElementById('login-button');
-    const btnClose = document.getElementById('close-modal-btn');
-    const btnCancel = document.getElementById('cancel-btn');
+    const btnClose = document.getElementById('close-modal-btn'); // Botão X
+    const btnCancel = document.getElementById('cancel-btn');     // Botão Cancelar
     const form = document.getElementById('login-form');
 
+    // Configura o botão de "Login/Logout" no topo do site
     if (btnLoginHeader) {
         const novoBtn = btnLoginHeader.cloneNode(true);
         btnLoginHeader.parentNode.replaceChild(novoBtn, btnLoginHeader);
         
         novoBtn.addEventListener('click', () => {
             if (usuarioLogado) {
-                fazerLogout();
+                fazerLogout(); // Se já tem alguém, sai da conta.
             } else {
-                if (modal) modal.classList.remove('hidden');
+                if (modal) modal.classList.remove('hidden'); // Se não, abre a janela de login.
             }
         });
     }
 
+    // Configura os botões que fecham a janela de login sem fazer nada
     if (btnClose) btnClose.onclick = () => modal.classList.add('hidden');
     if (btnCancel) btnCancel.onclick = () => modal.classList.add('hidden');
 
+    // Lógica de quando a pessoa clica em "ENTRAR"
     if (form) {
         form.onsubmit = async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Impede a página de recarregar sozinha
 
-            limparErros(form);
+            limparErros(form); // Apaga mensagens de erro antigas
 
+            // Pega o que foi digitado
             const emailInput = document.getElementById('email');
             const senhaInput = document.getElementById('password');
             
@@ -67,6 +104,7 @@ function configurarLogin() {
             const senha = senhaInput.value.trim();
             let temErro = false;
 
+            // Verifica se deixou em branco
             if (!email) {
                 mostrarErro(emailInput, 'O e-mail é obrigatório.');
                 temErro = true;
@@ -76,30 +114,35 @@ function configurarLogin() {
                 temErro = true;
             }
 
-            if (temErro) return;
+            if (temErro) return; // Se tiver erro, para por aqui.
 
             try {
+                // Envia e-mail e senha para o servidor conferir
                 const response = await fetch('/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, senha })
                 });
 
+                // Se o servidor disser que a senha está errada:
                 if (!response.ok) {
                     mostrarErro(emailInput, '');
                     mostrarErro(senhaInput, 'E-mail ou senha incorretos.'); 
                     return;
                 }
 
+                // Se deu certo: Salva os dados do usuário na "memória" do site
                 const dadosUsuario = await response.json();
                 usuarioLogado = dadosUsuario;
 
+                // Fecha a janela e atualiza a tela para modo "Logado"
                 modal.classList.add('hidden');
                 atualizarInterfaceUsuario();
                 
                 filtroAtual = null; 
                 renderizarMainAtividades(1);
 
+                // Limpa os campos de texto
                 emailInput.value = '';
                 senhaInput.value = '';
 
@@ -113,6 +156,7 @@ function configurarLogin() {
     }
 }
 
+// Função visual: Faz aparecer o texto vermelho de erro embaixo do campo
 function mostrarErro(inputElement, mensagem) {
     inputElement.classList.add('input-error');
     
@@ -128,6 +172,7 @@ function mostrarErro(inputElement, mensagem) {
     span.innerText = mensagem;
 }
 
+// Função visual: Apaga todos os textos vermelhos de erro
 function limparErros(formElement) {
     const inputs = formElement.querySelectorAll('.input-error');
     inputs.forEach(input => input.classList.remove('input-error'));
@@ -136,17 +181,25 @@ function limparErros(formElement) {
     mensagens.forEach(msg => msg.remove());
 }
 
+// Função de Sair da Conta
 function fazerLogout() {
-    usuarioLogado = null;
+    usuarioLogado = null; // Apaga a memória do usuário
     filtroAtual = null;
-    atualizarInterfaceUsuario();
+    atualizarInterfaceUsuario(); // Muda a tela de volta para visitante
     renderizarMainAtividades(1);
     alert("Você saiu da conta.");
 }
 
+// ==================================================================
+// SEÇÃO 5: BARRA LATERAL (Sidebar)
+// ==================================================================
+// Esta função decide o que mostrar na lateral esquerda do site.
+// Cenário A (Tem Usuário): Mostra foto, estatísticas e botão "Nova Atividade".
+// Cenário B (Visitante): Mostra apenas a logo do site.
 function atualizarInterfaceUsuario() {
     const sidebarContainer = document.querySelector('.sidebar');
     
+    // Muda o texto do botão no topo (Login ou Logout)
     const btnLoginHeader = document.getElementById('login-button');
     if (btnLoginHeader) {
         btnLoginHeader.innerText = usuarioLogado ? "Logout" : "Login";
@@ -154,6 +207,7 @@ function atualizarInterfaceUsuario() {
     }
 
     if (usuarioLogado) {
+        // --- HTML PARA USUÁRIO LOGADO ---
         sidebarContainer.innerHTML = `
             <div class="profile-card">
                 <img src="./images/${usuarioLogado.imagem}" alt="Avatar" id="logo-header-btn-sidebar">
@@ -185,9 +239,11 @@ function atualizarInterfaceUsuario() {
             </footer>
         `;
         
+        // Reativa o clique na logo da sidebar
         const logoSidebar = document.getElementById('logo-header-btn-sidebar');
         if(logoSidebar) logoSidebar.onclick = () => { filtroAtual = null; renderizarMainAtividades(1); };
 
+        // Configura o botão "Atividade" para abrir a tela de cadastro
         const openRegistroBtn = document.getElementById('open-registro-btn');
         if (openRegistroBtn) {
             openRegistroBtn.addEventListener('click', () => {
@@ -197,6 +253,7 @@ function atualizarInterfaceUsuario() {
         }
 
     } else {
+        // --- HTML PARA VISITANTE (SEM LOGIN) ---
         sidebarContainer.innerHTML = `
             <div class="profile-card">
                 <img src="./images/SAEPSaude.png" alt="Avatar do Usuário" id="logo-header-btn-sidebar">
@@ -222,18 +279,26 @@ function atualizarInterfaceUsuario() {
     }
 }
 
+
+// ==================================================================
+// SEÇÃO 6: O FEED DE NOTÍCIAS (Renderização Principal)
+// ==================================================================
+// Esta é a função principal que "desenha" a lista de atividades na tela.
 async function renderizarMainAtividades(pagina = 1) {
     if (!mainContent) return;
 
     const paginaNum = parseInt(pagina);
 
+    // Remove destaque do botão de cadastro se ele estiver ativo
     const btnAtividade = document.getElementById('open-registro-btn');
     if (btnAtividade) {
         btnAtividade.classList.remove('atividade-ativo');
     }
 
+    // Função auxiliar para destacar o botão de filtro selecionado
     const getClass = (tipo) => filtroAtual === tipo ? 'active' : '';
 
+    // 1. Desenha a estrutura básica (Cabeçalho + Filtros + Área vazia de posts)
     mainContent.innerHTML = `
         <header class="main-header">
             <h2>Atividades Recentes</h2>
@@ -252,15 +317,16 @@ async function renderizarMainAtividades(pagina = 1) {
         <div id="pagination-controls" class="pagination-container"></div>
     `;
 
-    configurarLogin();
+    configurarLogin(); // Reconecta o botão de login que acabamos de redesenhar
 
     const container = document.getElementById('activity-list');
 
     try {
+        // 2. Prepara o pedido para o servidor (API)
         const usuarioIdParam = usuarioLogado ? usuarioLogado.id : 0;
-        
         const tipoParam = filtroAtual ? `&tipo=${filtroAtual}` : '';
         
+        // Busca as atividades
         const response = await fetch(`/atividades?pagina=${pagina}&usuarioId=${usuarioIdParam}${tipoParam}`);
 
         if (!response.ok) {
@@ -271,17 +337,20 @@ async function renderizarMainAtividades(pagina = 1) {
         const atividades = data.atividades;
         const totalPaginas = data.totalPaginas;
 
+        // 3. Se a lista estiver vazia, avisa. Se tiver conteúdo, cria os Cards.
         if (atividades.length === 0) {
             container.innerHTML = '<p style="text-align:center; padding:20px;">Nenhuma atividade encontrada com esse filtro.</p>';
         } else {
-            
+            // Transforma os dados em HTML visual
             container.innerHTML = atividades.map(criarCardAtividade).join('');
 
+            // Ativa os botões de Like e Comentário para cada card criado
             atividades.forEach(atividade => {
                 ligarEventosCard(atividade.id);
             });
         }
 
+        // 4. Cria os botões de paginação no final da tela (1, 2, Próximo...)
         renderizarPaginacao(totalPaginas, paginaNum);
 
     } catch (error) {
@@ -290,30 +359,33 @@ async function renderizarMainAtividades(pagina = 1) {
     }
 }
 
+// Gera os botões "Anterior", "1", "2", "Próximo"
 function renderizarPaginacao(totalPaginas, paginaAtual) {
     const container = document.getElementById('pagination-controls');
     if (!container) return;
 
     container.innerHTML = '';
 
+    // Botão "Anterior"
     if (paginaAtual > 1) {
         const prevBtn = document.createElement('button');
         prevBtn.innerText = 'Anterior';
         prevBtn.classList.add('page-btn');
         prevBtn.addEventListener('click', () => {
             renderizarMainAtividades(paginaAtual - 1);
-            window.scrollTo(0, 0);
+            window.scrollTo(0, 0); // Rola a tela para o topo
         });
         container.appendChild(prevBtn);
     }
 
+    // Botões Numéricos
     for (let i = 1; i <= totalPaginas; i++) {
         const pageBtn = document.createElement('button');
         pageBtn.innerText = i;
         pageBtn.classList.add('page-btn');
 
         if (i === paginaAtual) {
-            pageBtn.classList.add('active');
+            pageBtn.classList.add('active'); // Destaca a página atual
         }
 
         pageBtn.addEventListener('click', () => {
@@ -323,6 +395,7 @@ function renderizarPaginacao(totalPaginas, paginaAtual) {
         container.appendChild(pageBtn);
     }
 
+    // Botão "Próximo"
     if (paginaAtual < totalPaginas) {
         const nextBtn = document.createElement('button');
         nextBtn.innerText = 'Próximo';
@@ -335,12 +408,18 @@ function renderizarPaginacao(totalPaginas, paginaAtual) {
     }
 }
 
+
+// ==================================================================
+// SEÇÃO 7: INTERAÇÃO SOCIAL (Likes e Comentários)
+// ==================================================================
+// "Liga" os botões de um post específico para que funcionem quando clicados
 function ligarEventosCard(atividadeId) {
     const btnLike = document.querySelector(`[data-like-id="${atividadeId}"]`);
     const btnComment = document.querySelector(`[data-comment-id="${atividadeId}"]`);
 
     if (btnLike) {
         btnLike.addEventListener('click', async () => {
+            // Se não estiver logado, abre o modal de login em vez de dar like
             if (!usuarioLogado) {
                 const modal = document.getElementById('login-modal');
                 if (modal) modal.classList.remove('hidden');
@@ -357,11 +436,12 @@ function ligarEventosCard(atividadeId) {
                 if (modal) modal.classList.remove('hidden');
                 return;
             }
-            toggleComentarioForm(atividadeId);
+            toggleComentarioForm(atividadeId); // Abre/Fecha a área de comentários
         });
     }
 }
 
+// Lógica da Curtida (Like)
 async function toggleLike(atividadeId) {
     const btnLike = document.querySelector(`[data-like-id="${atividadeId}"]`);
     const imgLike = btnLike.querySelector('img');
@@ -370,14 +450,16 @@ async function toggleLike(atividadeId) {
     const jaCurtiu = imgLike.src.includes('CoracaoVermelho');
     let totalAtual = parseInt(spanLikes.textContent || '0');
 
+    // Efeito visual imediato (para parecer rápido para o usuário)
     if(jaCurtiu) {
-        imgLike.src = './images/coracao.svg';
+        imgLike.src = './images/coracao.svg'; // Tira o vermelho
         spanLikes.textContent = Math.max(0, totalAtual - 1);
     } else {
-        imgLike.src = './images/CoracaoVermelho.svg';
+        imgLike.src = './images/CoracaoVermelho.svg'; // Bota o vermelho
         spanLikes.textContent = totalAtual + 1;
     }
 
+    // Avisa o servidor que curtiu (em segundo plano)
     try {
         const response = await fetch(`/atividades/${atividadeId}/like`, {
             method: 'POST',
@@ -389,6 +471,7 @@ async function toggleLike(atividadeId) {
 
     } catch (error) {
         console.error('Erro ao dar like:', error);
+        // Se der erro no servidor, desfazemos a mudança visual
         if(jaCurtiu) {
             imgLike.src = './images/CoracaoVermelho.svg';
             spanLikes.textContent = totalAtual;
@@ -400,16 +483,18 @@ async function toggleLike(atividadeId) {
     }
 }
 
+// Exibe ou esconde a caixinha de digitar comentário
 function toggleComentarioForm(atividadeId) {
     const formContainer = document.getElementById(`comment-form-${atividadeId}`);
     if (formContainer.classList.contains('hidden')) {
         formContainer.classList.remove('hidden');
-        carregarComentarios(atividadeId);
+        carregarComentarios(atividadeId); // Carrega as mensagens se abrir
     } else {
         formContainer.classList.add('hidden');
     }
 }
 
+// Envia o texto do comentário para o servidor
 async function enviarComentario(atividadeId) {
     const textarea = document.getElementById(`comment-input-${atividadeId}`);
     const conteudo = textarea.value.trim();
@@ -438,6 +523,7 @@ async function enviarComentario(atividadeId) {
             return;
         }
 
+        // Limpa o campo e atualiza a lista
         textarea.value = '';
 
         const spanComments = document.querySelector(`[data-comments-count="${atividadeId}"]`);
@@ -454,6 +540,7 @@ async function enviarComentario(atividadeId) {
     }
 }
 
+// Busca os comentários do banco de dados e desenha na tela
 async function carregarComentarios(atividadeId) {
     const listaComentarios = document.getElementById(`comments-list-${atividadeId}`);
     try {
@@ -465,6 +552,7 @@ async function carregarComentarios(atividadeId) {
             return;
         }
 
+        // Cria o HTML de cada comentário
         listaComentarios.innerHTML = data.comentarios.map(comentario => `
             <div class="comment-item">
                 <img src="./images/${comentario.usuario_id.imagem}" alt="Avatar">
@@ -481,10 +569,16 @@ async function carregarComentarios(atividadeId) {
     }
 }
 
+
+// ==================================================================
+// SEÇÃO 8: TELA DE GERENCIAMENTO (Criar Atividade)
+// ==================================================================
+// Renderiza a tela onde o usuário preenche os dados para salvar uma atividade
 async function renderizarMainGerenciamento() {
     if (!usuarioLogado) return renderizarMainAtividades(1);
     if (!mainContent) return;
 
+    // Desenha o formulário na tela
     mainContent.innerHTML = `
         <header class="main-header">
             <h2>Gerenciamento de Atividades</h2>
@@ -531,6 +625,7 @@ async function renderizarMainGerenciamento() {
 
     configurarLogin();
 
+    // Prepara o formulário para receber o "submit" (clique em enviar)
     const atividadeForm = document.getElementById('atividade-form');
     if (atividadeForm) {
         atividadeForm.addEventListener('submit', handleRegistroAtividade);
@@ -539,6 +634,7 @@ async function renderizarMainGerenciamento() {
     carregarMinhasAtividades();
 }
 
+// Busca apenas as atividades do PRÓPRIO usuário para mostrar no histórico pessoal
 async function carregarMinhasAtividades() {
     const listaDiv = document.getElementById('minhas-atividades-lista');
     if (!listaDiv || !usuarioLogado) return;
@@ -567,8 +663,9 @@ async function carregarMinhasAtividades() {
     }
 }
 
+// Processa o cadastro da nova atividade
 async function handleRegistroAtividade(e) {
-    e.preventDefault();
+    e.preventDefault(); // Evita recarregar a página
     if (!usuarioLogado) {
         alert("Você precisa estar logado.");
         return;
@@ -578,38 +675,29 @@ async function handleRegistroAtividade(e) {
     
     limparErros(form);
 
+    // Captura os campos
     const tipoInput = form.tipo_atividade_form;
     const distanciaInput = form.distancia_form;
     const duracaoInput = form.duracao_form;
     const caloriasInput = form.calorias_form;
 
     let temErro = false;
-    if (!tipoInput.value.trim()) {
-        mostrarErro(tipoInput, 'Campo obrigatório');
-        temErro = true;
-    }
-    if (!distanciaInput.value.trim()) {
-        mostrarErro(distanciaInput, 'Campo obrigatório');
-        temErro = true;
-    }
-    if (!duracaoInput.value.trim()) {
-        mostrarErro(duracaoInput, 'Campo obrigatório');
-        temErro = true;
-    }
-    if (!caloriasInput.value.trim()) {
-        mostrarErro(caloriasInput, 'Campo obrigatório');
-        temErro = true;
-    }
+    // Validação: Confere se está tudo preenchido
+    if (!tipoInput.value.trim()) { mostrarErro(tipoInput, 'Campo obrigatório'); temErro = true; }
+    if (!distanciaInput.value.trim()) { mostrarErro(distanciaInput, 'Campo obrigatório'); temErro = true; }
+    if (!duracaoInput.value.trim()) { mostrarErro(duracaoInput, 'Campo obrigatório'); temErro = true; }
+    if (!caloriasInput.value.trim()) { mostrarErro(caloriasInput, 'Campo obrigatório'); temErro = true; }
 
     if (temErro) return;
 
+    // Limpa os dados (Ex: remove letras dos campos de números)
     const tipoTexto = tipoInput.value.trim();
     const distanciaTexto = distanciaInput.value.replace(/\D/g, ""); 
     const duracaoTexto = duracaoInput.value.replace(/\D/g, "");
     const caloriasTexto = caloriasInput.value.replace(/\D/g, "");
 
+    // Verifica se o tipo é válido
     const tiposPermitidos = ['corrida', 'caminhada', 'trilha'];
-    
     if (!tiposPermitidos.includes(tipoTexto.toLowerCase())) {
         mostrarErro(tipoInput, 'Apenas: Corrida, Caminhada ou Trilha');
         return; 
@@ -617,6 +705,7 @@ async function handleRegistroAtividade(e) {
 
     const tipoFormatado = tipoTexto.charAt(0).toLowerCase() + tipoTexto.slice(1).toLowerCase();
 
+    // Cria o objeto com os dados finais
     const novaAtividade = {
         tipo_atividade: tipoFormatado,
         distancia_percorrida: parseInt(distanciaTexto),
@@ -625,6 +714,7 @@ async function handleRegistroAtividade(e) {
         usuario_id: usuarioLogado.id
     };
 
+    // Envia para o servidor
     try {
         const response = await fetch('/atividades', {
             method: 'POST',
@@ -638,6 +728,7 @@ async function handleRegistroAtividade(e) {
         form.reset();
         limparErros(form);
 
+        // Pequeno truque para atualizar os dados do usuário (contagem de atividades)
         const resLogin = await fetch('/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -647,7 +738,7 @@ async function handleRegistroAtividade(e) {
             usuarioLogado = await resLogin.json();
             atualizarInterfaceUsuario();
         }
-        carregarMinhasAtividades();
+        carregarMinhasAtividades(); // Atualiza a lista abaixo
 
     } catch (erro) {
         console.error(erro);
@@ -655,15 +746,25 @@ async function handleRegistroAtividade(e) {
     }
 }
 
+
+// ==================================================================
+// SEÇÃO 9: UTILITÁRIOS (Ajudantes Visuais)
+// ==================================================================
+
+// Função "Forma de Bolo": Pega os dados da atividade e cria o HTML do Card
 function criarCardAtividade(atividade) {
+    // Converte metros para KM
     const distKM = (atividade.distancia_percorrida / 1000).toFixed(2);
+    // Formata o tempo (ex: 90min -> 1h 30min)
     const duracaoFormatada = formatarDuracao(atividade.duracao_atividade);
+    // Formata a data
     const dataFormatada = formatarData(atividade.createdAt || atividade.createdat);
 
     const autor = atividade.usuario_id || {};
     const nomeUsuario = autor.nome_usuario || 'Desconhecido';
     const imagemUsuario = autor.imagem || 'SAEPSaude.png';
     
+    // Verifica se EU curti esse post para pintar o coração de vermelho
     const usuarioCurtiu = usuarioLogado &&
         atividade.usuariosQueCurtiram &&
         atividade.usuariosQueCurtiram.some(id => Number(id) === Number(usuarioLogado.id));
@@ -712,6 +813,7 @@ function criarCardAtividade(atividade) {
     `;
 }
 
+// Função ajudante: Converte minutos em horas e minutos legíveis
 function formatarDuracao(totalMinutos) {
     const horas = Math.floor(totalMinutos / 60);
     const minutos = totalMinutos % 60;
@@ -720,6 +822,7 @@ function formatarDuracao(totalMinutos) {
     return `${horas}h ${minutos}min`;
 }
 
+// Função ajudante: Transforma a data do sistema em Dia/Mês/Ano Hora:Minuto
 function formatarData(isoString) {
     if (!isoString) return '';
     const data = new Date(isoString);
