@@ -361,6 +361,29 @@ body {
     margin-bottom: 20px;
 }
 
+.form-actions {
+    display: flex;
+    justify-content: flex-end; /* Alinha à direita */
+    gap: 10px; /* Espaço entre os botões */
+    margin-top: 20px;
+}
+
+.form-actions .submit-btn {
+    width: auto; /* O botão ocupa apenas o espaço do texto */
+    margin-top: 0; /* Remove a margem antiga */
+    padding: 8px 20px; /* Ajuste de tamanho */
+}
+
+#cancel-btn {
+    background-color: var(--branco);
+    color: var(--cinza);
+    border: 1px solid var(--cinza); /* Borda para destacar no fundo branco */
+}
+
+#cancel-btn:hover {
+    background-color: #f0f0f0; /* Um cinza muito claro ao passar o mouse */
+}
+
 .close-btn {
     background: none;
     border: none;
@@ -403,4 +426,10 @@ body {
 
 .submit-btn:hover {
     background-color: #372e8a;
+}
+
+.filters button.active {
+    background-color: #483DAD;
+    color: white;
+    border-color: #483DAD;
 }
