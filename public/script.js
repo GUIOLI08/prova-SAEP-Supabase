@@ -7,7 +7,6 @@ const mainContent = document.getElementById('main-content');
 
 document.addEventListener('DOMContentLoaded', () => {
     renderizarMainAtividades(1);
-    configurarLogin();
     configurarListenerLogo();
 });
 
@@ -77,15 +76,19 @@ function configurarLogin() {
 
                 modal.classList.add('hidden');
                 atualizarInterfaceUsuario();
+                
 
                 alert(`Bem-vindo, ${usuarioLogado.nome_usuario}!`);
-                renderizarMainAtividades(1)
+
+                renderizarMainAtividades(1);
 
             } catch (erro) {
                 console.error(erro);
                 alert('Erro ao tentar fazer login. Verifique sua rota POST /login.');
             }
         });
+
+        form.setAttribute('data-configurado', 'true');
     }
 }
 
