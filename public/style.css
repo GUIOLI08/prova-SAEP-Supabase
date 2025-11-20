@@ -523,3 +523,16 @@ body {
 #logo-header-btn-sidebar{
     cursor: pointer;
 }
+
+.input-error {
+    border: 2px solid #ff4d4d !important; /* Vermelho forte */
+}
+
+/* Classe para o texto de erro embaixo */
+.error-message {
+    color: #ff4d4d;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    display: block;
+    font-weight: 500;
+}

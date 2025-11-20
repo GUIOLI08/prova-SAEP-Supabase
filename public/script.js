@@ -10,7 +10,6 @@ const mainContent = document.getElementById('main-content');
 
 document.addEventListener('DOMContentLoaded', () => {
     renderizarMainAtividades(1);
-    // configurarLogin(); // Removido pois já é chamado no renderizar
     configurarListenerLogo();
 });
 
@@ -76,8 +75,25 @@ function configurarLogin() {
         form.onsubmit = async (e) => {
             e.preventDefault();
 
-            const email = document.getElementById('email').value;
-            const senha = document.getElementById('password').value;
+            limparErros(form);
+
+            const emailInput = document.getElementById('email');
+            const senhaInput = document.getElementById('password');
+            
+            const email = emailInput.value.trim();
+            const senha = senhaInput.value.trim();
+            let temErro = false;
+
+            if (!email) {
+                mostrarErro(emailInput, 'O e-mail é obrigatório.');
+                temErro = true;
+            }
+            if (!senha) {
+                mostrarErro(senhaInput, 'A senha é obrigatória.');
+                temErro = true;
+            }
+
+            if (temErro) return;
 
             try {
                 const response = await fetch('/login', {
@@ -87,7 +103,8 @@ function configurarLogin() {
                 });
 
                 if (!response.ok) {
-                    alert('Email ou senha incorretos!');
+                    mostrarErro(emailInput, '');
+                    mostrarErro(senhaInput, 'E-mail ou senha incorretos.');
                     return;
                 }
 
@@ -101,6 +118,9 @@ function configurarLogin() {
                 filtroAtual = null; 
                 renderizarMainAtividades(1);
 
+                emailInput.value = '';
+                senhaInput.value = '';
+
                 alert(`Bem-vindo, ${usuarioLogado.nome_usuario}!`);
 
             } catch (erro) {
@@ -109,6 +129,35 @@ function configurarLogin() {
             }
         };
     }
+}
+
+function mostrarErro(inputElement, mensagem) {
+    // Adiciona a borda vermelha
+    inputElement.classList.add('input-error');
+    
+    // Verifica se já existe uma mensagem de erro, se não, cria
+    // Assume que o input está dentro de uma div (form-group)
+    const parent = inputElement.parentElement;
+    let span = parent.querySelector('.error-message');
+    
+    if (!span) {
+        span = document.createElement('span');
+        span.className = 'error-message';
+        parent.appendChild(span);
+    }
+    
+    // Define o texto (pode ser vazio se for só pra ficar vermelho)
+    span.innerText = mensagem;
+}
+
+function limparErros(formElement) {
+    // Remove bordas vermelhas
+    const inputs = formElement.querySelectorAll('.input-error');
+    inputs.forEach(input => input.classList.remove('input-error'));
+    
+    // Remove mensagens de texto
+    const mensagens = formElement.querySelectorAll('.error-message');
+    mensagens.forEach(msg => msg.remove());
 }
 
 function fazerLogout() {
@@ -261,13 +310,9 @@ async function renderizarMainAtividades(pagina = 1) {
         if (atividades.length === 0) {
             container.innerHTML = '<p style="text-align:center; padding:20px;">Nenhuma atividade encontrada com esse filtro.</p>';
         } else {
-            // Como seu servidor já está OTIMIZADO e entrega tudo pronto, 
-            // NÃO PRECISAMOS daquele loop "for fetch" gigante aqui.
-            // Se seu servidor novo já traz totalLikes e usuariosQueCurtiram, renderizamos direto:
             
             container.innerHTML = atividades.map(criarCardAtividade).join('');
 
-            // Liga os event listeners de like e comentário
             atividades.forEach(atividade => {
                 ligarEventosCard(atividade.id);
             });
