@@ -29,6 +29,7 @@ function configurarLogin() {
     const modal = document.getElementById('login-modal');
     const btnLoginHeader = document.getElementById('login-button');
     const btnClose = document.getElementById('close-modal-btn');
+    const btnCancel = document.getElementById('cancel-btn');
     const form = document.getElementById('login-form');
 
     if (btnLoginHeader) {
@@ -43,8 +44,11 @@ function configurarLogin() {
         });
     }
 
-    if (btnClose) {
+    if (btnClose || btnCancel) {
         btnClose.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+        btnCancel.addEventListener('click', () => {
             modal.classList.add('hidden');
         });
     }
@@ -621,18 +625,6 @@ async function handleRegistroAtividade(e) {
 }
 
 function criarCardAtividade(atividade) {
-
-    console.log(`🔎 Analisando Atividade ${atividade.id}:`);
-    console.log("   Eu sou:", usuarioLogado);
-    console.log("   Quem curtiu (lista):", atividade.usuariosQueCurtiram);
-    
-    if (usuarioLogado && atividade.usuariosQueCurtiram) {
-         // Teste de comparação direta pra ver se o JS tá de birra com tipos
-        const temMeuId = atividade.usuariosQueCurtiram.some(id => id == usuarioLogado.id);
-        console.log(`   Match (==): ${temMeuId}`);
-    } else {
-        console.log("   ❌ Não deu pra comparar (usuário deslogado ou lista vazia)");
-    }
 
     const distKM = (atividade.distancia_percorrida / 1000).toFixed(2);
     const duracaoFormatada = formatarDuracao(atividade.duracao_atividade);
