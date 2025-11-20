@@ -24,26 +24,38 @@ app.get('/', (req, res) => {
 });
 
 // ----------------------------------------------------------------------
-// 🚀 ROTA DE ATIVIDADES (SUPER OTIMIZADA - QUERY ÚNICA)
+// 🚀 ROTA DE ATIVIDADES (COM FILTROS E OTIMIZADA)
 // ----------------------------------------------------------------------
 app.get('/atividades', async (req, res) => {
     const pagina = parseInt(req.query.pagina) || 1;
+    // 🚨 NOVO: Captura o tipo do filtro da URL (ex: ?tipo=corrida)
+    const filtroTipo = req.query.tipo; 
+
     const itensPorPagina = 4;
     const from = (pagina - 1) * itensPorPagina;
     const to = from + itensPorPagina - 1;
 
-    console.log(`➡️\t Buscando atividades (Pág ${pagina}) - MODO ULTRA RÁPIDO ⚡`);
+    console.log(`➡️\t Buscando atividades (Pág ${pagina} | Filtro: ${filtroTipo || 'Todos'})`);
 
     try {
-        // BUSCA TUDO DE UMA VEZ: Atividade + Dados do Usuário + Likes + Contagem de Comentários
-        const { data, count, error } = await supabase
+        // 1. INICIA A QUERY BÁSICA
+        let query = supabase
             .from('atividades')
             .select(`
                 *,
                 usuario:usuario_id ( nome_usuario, imagem ),
                 likes ( usuario_id ),
                 comments ( id )
-            `, { count: 'exact' })
+            `, { count: 'exact' });
+
+        // 2. APLICA O FILTRO SE ELE EXISTIR
+        // Só aplica se for um dos tipos válidos do banco
+        if (filtroTipo && ['corrida', 'caminhada', 'trilha'].includes(filtroTipo)) {
+            query = query.eq('tipo_atividade', filtroTipo);
+        }
+
+        // 3. FINALIZA A QUERY (ORDENAÇÃO E PAGINAÇÃO)
+        const { data, count, error } = await query
             .order('createdat', { ascending: false })
             .range(from, to);
 
@@ -52,27 +64,17 @@ app.get('/atividades', async (req, res) => {
             return res.status(500).send(error);
         }
 
-        // FORMATA OS DADOS PARA O FRONTEND
-        // O Supabase retorna os joins como arrays/objetos, aqui nós simplificamos
+        // 4. FORMATA OS DADOS (Igual antes)
         const atividadesFormatadas = data.map(item => {
-            // Prevenção de erro caso venha nulo
             const likesArray = item.likes || [];
             const commentsArray = item.comments || [];
             
             return {
                 ...item,
-                // Se usuario_id vier como objeto (join), mantemos. Se vier o ID, ok.
-                // O frontend espera acessar .nome_usuario dentro de usuario_id
                 usuario_id: item.usuario || { nome_usuario: 'Desconhecido', imagem: 'SAEPSaude.png' },
-                
-                // Transforma [{usuario_id: 2}, {usuario_id: 5}] em [2, 5]
                 usuariosQueCurtiram: likesArray.map(l => l.usuario_id),
-                
-                // Contagens calculadas pelo tamanho do array retornado
                 totalLikes: likesArray.length,
                 totalComentarios: commentsArray.length,
-                
-                // Deixamos vazio para carregar detalhes apenas se clicar (lazy loading)
                 comentarios: [] 
             };
         });

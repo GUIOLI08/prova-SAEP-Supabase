@@ -1,4 +1,7 @@
 let usuarioLogado = null;
+// 🚨 NOVO: Variável para guardar o filtro (corrida, caminhada, etc)
+let filtroAtual = null; 
+
 const mainContent = document.getElementById('main-content');
 
 // ----------------------------------------------------------------------
@@ -7,17 +10,37 @@ const mainContent = document.getElementById('main-content');
 
 document.addEventListener('DOMContentLoaded', () => {
     renderizarMainAtividades(1);
+    // configurarLogin(); // Removido pois já é chamado no renderizar
     configurarListenerLogo();
 });
 
 function configurarListenerLogo() {
     const logoButton = document.getElementById('logo-header-btn');
     if (logoButton) {
-        logoButton.removeEventListener('click', () => renderizarMainAtividades(1));
-        logoButton.addEventListener('click', () => {
+        // Clona para remover listeners antigos e evitar duplicidade
+        const novoLogo = logoButton.cloneNode(true);
+        logoButton.parentNode.replaceChild(novoLogo, logoButton);
+        
+        novoLogo.addEventListener('click', () => {
+            // 🚨 Resetar filtro ao clicar no Logo
+            filtroAtual = null; 
             renderizarMainAtividades(1);
         });
     }
+}
+
+// ----------------------------------------------------------------------
+// 🚨 NOVA FUNÇÃO: LÓGICA DO FILTRO
+// ----------------------------------------------------------------------
+window.filtrarAtividades = function(tipo) {
+    // Se clicar no mesmo que já tá ativo, remove o filtro (toggle)
+    if (filtroAtual === tipo) {
+        filtroAtual = null;
+    } else {
+        filtroAtual = tipo;
+    }
+    // Recarrega a lista na página 1 com o novo filtro
+    renderizarMainAtividades(1);
 }
 
 // ----------------------------------------------------------------------
@@ -31,29 +54,27 @@ function configurarLogin() {
     const btnCancel = document.getElementById('cancel-btn');
     const form = document.getElementById('login-form');
 
+    // Botão do Header (Dinâmico)
     if (btnLoginHeader) {
-        btnLoginHeader.addEventListener('click', () => {
+        const novoBtn = btnLoginHeader.cloneNode(true);
+        btnLoginHeader.parentNode.replaceChild(novoBtn, btnLoginHeader);
+        
+        novoBtn.addEventListener('click', () => {
             if (usuarioLogado) {
                 fazerLogout();
             } else {
-                if (modal) {
-                    modal.classList.remove('hidden');
-                }
+                if (modal) modal.classList.remove('hidden');
             }
         });
     }
 
-    if (btnClose || btnCancel) {
-        btnClose.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
-        btnCancel.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
-    }
+    // Elementos Estáticos (Modal e Form)
+    if (btnClose) btnClose.onclick = () => modal.classList.add('hidden');
+    if (btnCancel) btnCancel.onclick = () => modal.classList.add('hidden');
 
     if (form) {
-        form.addEventListener('submit', async (e) => {
+        // Usando onsubmit para evitar múltiplos listeners (O Bug do Alert Duplo)
+        form.onsubmit = async (e) => {
             e.preventDefault();
 
             const email = document.getElementById('email').value;
@@ -77,23 +98,23 @@ function configurarLogin() {
                 modal.classList.add('hidden');
                 atualizarInterfaceUsuario();
                 
+                // 🚨 Reseta filtro ao logar para mostrar tudo
+                filtroAtual = null; 
+                renderizarMainAtividades(1);
 
                 alert(`Bem-vindo, ${usuarioLogado.nome_usuario}!`);
 
-                renderizarMainAtividades(1);
-
             } catch (erro) {
                 console.error(erro);
-                alert('Erro ao tentar fazer login. Verifique sua rota POST /login.');
+                alert('Erro ao tentar fazer login.');
             }
-        });
-
-        form.setAttribute('data-configurado', 'true');
+        };
     }
 }
 
 function fazerLogout() {
     usuarioLogado = null;
+    filtroAtual = null; // Reseta filtro ao sair
     atualizarInterfaceUsuario();
     renderizarMainAtividades(1);
     alert("Você saiu da conta.");
@@ -104,19 +125,20 @@ function fazerLogout() {
 // ----------------------------------------------------------------------
 
 function atualizarInterfaceUsuario() {
-    const btnLoginHeader = document.getElementById('login-button');
     const sidebarContainer = document.querySelector('.sidebar');
+    
+    // Atualiza botão de login no header se existir na tela atual
+    const btnLoginHeader = document.getElementById('login-button');
+    if (btnLoginHeader) {
+        btnLoginHeader.innerText = usuarioLogado ? "Logout" : "Login";
+        btnLoginHeader.className = usuarioLogado ? "login-button logout-button" : "login-button";
+        // Nota: Removemos o style inline background-color para deixar o CSS controlar a classe
+    }
 
     if (usuarioLogado) {
-        if (btnLoginHeader) {
-            btnLoginHeader.innerText = "Logout";
-            btnLoginHeader.classList.add('logout-button');
-            btnLoginHeader.style.backgroundColor = "var(--cinza)";
-        }
-
         sidebarContainer.innerHTML = `
             <div class="profile-card">
-                <img src="./images/${usuarioLogado.imagem}" alt="Avatar" id="logo-header-btn">
+                <img src="./images/${usuarioLogado.imagem}" alt="Avatar" id="logo-header-btn-sidebar">
                 <h3>@${usuarioLogado.nome_usuario}</h3>
                 <p>${usuarioLogado.nome || ''}</p> 
 
@@ -145,8 +167,10 @@ function atualizarInterfaceUsuario() {
                 <p>Copyright - 2025/2026</p>
             </footer>
         `;
-
-        configurarListenerLogo();
+        
+        // Reatacha o listener do logo sidebar (se quiser que ele também resete)
+        const logoSidebar = document.getElementById('logo-header-btn-sidebar');
+        if(logoSidebar) logoSidebar.onclick = () => { filtroAtual = null; renderizarMainAtividades(1); };
 
         const openRegistroBtn = document.getElementById('open-registro-btn');
         if (openRegistroBtn) {
@@ -156,24 +180,13 @@ function atualizarInterfaceUsuario() {
         }
 
     } else {
-        if (btnLoginHeader) {
-            btnLoginHeader.innerText = "Login";
-            btnLoginHeader.style.backgroundColor = "#483DAD";
-        }
-
         sidebarContainer.innerHTML = `
             <div class="profile-card">
-                <img src="./images/SAEPSaude.png" alt="Avatar do Usuário" id="logo-header-btn">
+                <img src="./images/SAEPSaude.png" alt="Avatar do Usuário" id="logo-header-btn-sidebar">
                 <h3>SAEPSaúde</h3>
                 <div class="profile-stats">
-                    <div class="stat-item">
-                        <span>Atividades</span>
-                        <strong>12</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Calorias</span>
-                        <strong>3500</strong>
-                    </div>
+                    <div class="stat-item"><span>Atividades</span><strong>12</strong></div>
+                    <div class="stat-item"><span>Calorias</span><strong>3500</strong></div>
                 </div>
             </div>
             <footer class="main-footer">
@@ -186,7 +199,9 @@ function atualizarInterfaceUsuario() {
                 <p>Copyright - 2025/2026</p>
             </footer>
         `;
-        configurarListenerLogo();
+        
+        const logoSidebar = document.getElementById('logo-header-btn-sidebar');
+        if(logoSidebar) logoSidebar.onclick = () => { filtroAtual = null; renderizarMainAtividades(1); };
     }
 }
 
@@ -197,6 +212,9 @@ function atualizarInterfaceUsuario() {
 async function renderizarMainAtividades(pagina = 1) {
     if (!mainContent) return;
 
+    // Helper para definir a classe 'active'
+    const getClass = (tipo) => filtroAtual === tipo ? 'active' : '';
+
     mainContent.innerHTML = `
         <header class="main-header">
             <h2>Atividades Recentes</h2>
@@ -204,13 +222,13 @@ async function renderizarMainAtividades(pagina = 1) {
         </header>
 
         <div class="filters">
-            <button>Corrida</button>
-            <button>Caminhada</button>
-            <button>Trilha</button>
+            <button class="${getClass('corrida')}" onclick="filtrarAtividades('corrida')">Corrida</button>
+            <button class="${getClass('caminhada')}" onclick="filtrarAtividades('caminhada')">Caminhada</button>
+            <button class="${getClass('trilha')}" onclick="filtrarAtividades('trilha')">Trilha</button>
         </div>
         
         <section id="activity-list" class="feed-list">
-            <p>Carregando atividades...</p>
+            <p style="text-align:center; padding:20px; color:#888;">Carregando...</p>
         </section>
         <div id="pagination-controls" class="pagination-container"></div>
     `;
@@ -220,10 +238,13 @@ async function renderizarMainAtividades(pagina = 1) {
     const container = document.getElementById('activity-list');
 
     try {
-
         const usuarioIdParam = usuarioLogado ? usuarioLogado.id : 0;
-
-        const response = await fetch(`/atividades?pagina=${pagina}&usuarioId=${usuarioIdParam}`);
+        
+        // 🚨 ENVIA O FILTRO PARA O SERVIDOR
+        // Se filtroAtual for null, envia string vazia
+        const tipoParam = filtroAtual ? `&tipo=${filtroAtual}` : '';
+        
+        const response = await fetch(`/atividades?pagina=${pagina}&usuarioId=${usuarioIdParam}${tipoParam}`);
 
         if (!response.ok) {
             throw new Error('Falha ao buscar atividades.');
@@ -234,21 +255,12 @@ async function renderizarMainAtividades(pagina = 1) {
         const totalPaginas = data.totalPaginas;
 
         if (atividades.length === 0) {
-            container.innerHTML = '<p>Nenhuma atividade encontrada.</p>';
+            container.innerHTML = '<p style="text-align:center; padding:20px;">Nenhuma atividade encontrada com esse filtro.</p>';
         } else {
-            // Busca likes e comentários para cada atividade
-            for (let atividade of atividades) {
-                const likesRes = await fetch(`/atividades/${atividade.id}/likes`);
-                const likesData = await likesRes.json();
-                atividade.totalLikes = likesData.total;
-                atividade.usuariosQueCurtiram = likesData.usuarios;
-
-                const commentsRes = await fetch(`/atividades/${atividade.id}/comentarios`);
-                const commentsData = await commentsRes.json();
-                atividade.totalComentarios = commentsData.total;
-                atividade.comentarios = commentsData.comentarios;
-            }
-
+            // Como seu servidor já está OTIMIZADO e entrega tudo pronto, 
+            // NÃO PRECISAMOS daquele loop "for fetch" gigante aqui.
+            // Se seu servidor novo já traz totalLikes e usuariosQueCurtiram, renderizamos direto:
+            
             container.innerHTML = atividades.map(criarCardAtividade).join('');
 
             // Liga os event listeners de like e comentário
@@ -271,17 +283,19 @@ function renderizarPaginacao(totalPaginas, paginaAtual) {
 
     container.innerHTML = '';
 
+    // Botão Anterior
     if (paginaAtual > 1) {
         const prevBtn = document.createElement('button');
         prevBtn.innerText = 'Anterior';
         prevBtn.classList.add('page-btn');
         prevBtn.addEventListener('click', () => {
-            renderizarMainAtividades(paginaAtual - 1)
+            renderizarMainAtividades(paginaAtual - 1);
             window.scrollTo(0, 0);
         });
         container.appendChild(prevBtn);
     }
 
+    // Botões de Números
     for (let i = 1; i <= totalPaginas; i++) {
         const pageBtn = document.createElement('button');
         pageBtn.innerText = i;
@@ -298,12 +312,13 @@ function renderizarPaginacao(totalPaginas, paginaAtual) {
         container.appendChild(pageBtn);
     }
 
+    // Botão Próximo
     if (paginaAtual < totalPaginas) {
         const nextBtn = document.createElement('button');
         nextBtn.innerText = 'Próximo';
         nextBtn.classList.add('page-btn');
         nextBtn.addEventListener('click', () => {
-            renderizarMainAtividades(paginaAtual + 1)
+            renderizarMainAtividades(paginaAtual + 1);
             window.scrollTo(0, 0);
         });
         container.appendChild(nextBtn);
@@ -342,6 +357,22 @@ function ligarEventosCard(atividadeId) {
 }
 
 async function toggleLike(atividadeId) {
+    const btnLike = document.querySelector(`[data-like-id="${atividadeId}"]`);
+    const imgLike = btnLike.querySelector('img');
+    const spanLikes = document.querySelector(`[data-likes-count="${atividadeId}"]`);
+    
+    // Optimistic UI: Muda na hora
+    const jaCurtiu = imgLike.src.includes('CoracaoVermelho');
+    let totalAtual = parseInt(spanLikes.textContent || '0');
+
+    if(jaCurtiu) {
+        imgLike.src = './images/coracao.svg';
+        spanLikes.textContent = Math.max(0, totalAtual - 1);
+    } else {
+        imgLike.src = './images/CoracaoVermelho.svg';
+        spanLikes.textContent = totalAtual + 1;
+    }
+
     try {
         const response = await fetch(`/atividades/${atividadeId}/like`, {
             method: 'POST',
@@ -349,49 +380,26 @@ async function toggleLike(atividadeId) {
             body: JSON.stringify({ usuarioId: usuarioLogado.id })
         });
 
-        if (!response.ok) {
-            alert('Erro ao processar like');
-            return;
-        }
-
-        const data = await response.json();
-
-        // Atualiza a UI
-        const btnLike = document.querySelector(`[data-like-id="${atividadeId}"]`);
-        const imgLike = btnLike.querySelector('img');
-        const spanLikes = document.querySelector(`[data-likes-count="${atividadeId}"]`);
-
-        // Busca o total atualizado
-        const likesRes = await fetch(`/atividades/${atividadeId}/likes`);
-        const likesData = await likesRes.json();
-
-        spanLikes.textContent = likesData.total;
-
-        // Verifica se o usuário atual curtiu
-        const usuarioCurtiu = likesData.usuarios.includes(usuarioLogado.id);
-
-        if (usuarioCurtiu) {
-            // Curtiu: Usa o CoracaoVermelho.svg
-            imgLike.src = './images/CoracaoVermelho.svg';
-            imgLike.style.filter = 'none'; // Remove o filtro se houver
-        } else {
-            // Não curtiu: Volta para o coracao.svg original (vazio)
-            imgLike.src = './images/coracao.svg';
-            imgLike.style.filter = 'none';
-        }
+        if (!response.ok) throw new Error('Erro API');
 
     } catch (error) {
         console.error('Erro ao dar like:', error);
+        // Reverte se der erro
+        if(jaCurtiu) {
+            imgLike.src = './images/CoracaoVermelho.svg';
+            spanLikes.textContent = totalAtual;
+        } else {
+            imgLike.src = './images/coracao.svg';
+            spanLikes.textContent = totalAtual;
+        }
         alert('Erro ao processar like');
     }
 }
 
 function toggleComentarioForm(atividadeId) {
     const formContainer = document.getElementById(`comment-form-${atividadeId}`);
-
     if (formContainer.classList.contains('hidden')) {
         formContainer.classList.remove('hidden');
-
         carregarComentarios(atividadeId);
     } else {
         formContainer.classList.add('hidden');
@@ -404,7 +412,7 @@ async function enviarComentario(atividadeId) {
 
     if(!conteudo){
         alert('Não é possível enviar um comentário vazio.');
-        return
+        return;
     }
     if (conteudo.length <= 2) {
         alert('Comentário deve ter mais de 2 caracteres');
@@ -426,19 +434,16 @@ async function enviarComentario(atividadeId) {
             return;
         }
 
-        // Limpa o campo
         textarea.value = '';
 
-        // Atualiza a contagem
         const spanComments = document.querySelector(`[data-comments-count="${atividadeId}"]`);
+        // Atualiza contador buscando do servidor ou incrementando localmente
         const commentsRes = await fetch(`/atividades/${atividadeId}/comentarios`);
         const commentsData = await commentsRes.json();
         spanComments.textContent = commentsData.total;
 
-        // Recarrega os comentários
         carregarComentarios(atividadeId);
-
-        alert('Comentário adicionado com sucesso!');
+        alert('Comentário adicionado!');
 
     } catch (error) {
         console.error('Erro ao enviar comentário:', error);
@@ -448,7 +453,6 @@ async function enviarComentario(atividadeId) {
 
 async function carregarComentarios(atividadeId) {
     const listaComentarios = document.getElementById(`comments-list-${atividadeId}`);
-
     try {
         const response = await fetch(`/atividades/${atividadeId}/comentarios`);
         const data = await response.json();
@@ -475,16 +479,19 @@ async function carregarComentarios(atividadeId) {
 }
 
 // ----------------------------------------------------------------------
-// 6. RENDERIZAÇÃO DA PÁGINA DE GERENCIAMENTO
+// 6. RENDERIZAÇÃO DA PÁGINA DE GERENCIAMENTO E HELPER FUNCTIONS
 // ----------------------------------------------------------------------
+// ... (O restante do seu código renderizarMainGerenciamento, handleRegistroAtividade, 
+// criarCardAtividade, formatarData manteve-se igual, apenas certifique-se de copiá-los
+// ou manter o que você já tinha lá embaixo)
+
+// VOU REPETIR AS FUNÇÕES AUXILIARES AQUI PARA GARANTIR QUE ESTÁ COMPLETO:
 
 async function renderizarMainGerenciamento() {
-    if (!usuarioLogado) {
-        return renderizarMainAtividades(1);
-    }
-
+    if (!usuarioLogado) return renderizarMainAtividades(1);
     if (!mainContent) return;
 
+    // Nota: Aqui o header é fixo para Gerenciamento
     mainContent.innerHTML = `
         <header class="main-header">
             <h2>Gerenciamento de Atividades</h2>
@@ -494,7 +501,6 @@ async function renderizarMainGerenciamento() {
         <div id="cadastro-container">
             <h3>Registrar Nova Atividade</h3>
             <form id="atividade-form" class="form-page">
-                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="tipo_atividade_form">Tipo</label>
@@ -555,23 +561,9 @@ async function carregarMinhasAtividades() {
             listaDiv.innerHTML = '<p>Você ainda não registrou nenhuma atividade.</p>';
             return;
         }
-
-        // Busca likes e comentários
-        for (let atividade of atividades) {
-            const likesRes = await fetch(`/atividades/${atividade.id}/likes`);
-            const likesData = await likesRes.json();
-            atividade.totalLikes = likesData.total;
-            atividade.usuariosQueCurtiram = likesData.usuarios;
-
-            const commentsRes = await fetch(`/atividades/${atividade.id}/comentarios`);
-            const commentsData = await commentsRes.json();
-            atividade.totalComentarios = commentsData.total;
-            atividade.comentarios = commentsData.comentarios;
-        }
-
+        // Renderiza usando a função que já temos
         listaDiv.innerHTML = `<div class="feed-list">${atividades.map(criarCardAtividade).join('')}</div>`;
 
-        // Liga eventos
         atividades.forEach(atividade => {
             ligarEventosCard(atividade.id);
         });
@@ -584,9 +576,8 @@ async function carregarMinhasAtividades() {
 
 async function handleRegistroAtividade(e) {
     e.preventDefault();
-
     if (!usuarioLogado) {
-        alert("Você precisa estar logado para registrar uma atividade.");
+        alert("Você precisa estar logado.");
         return;
     }
 
@@ -606,24 +597,21 @@ async function handleRegistroAtividade(e) {
             body: JSON.stringify(novaAtividade)
         });
 
-        if (!response.ok) {
-            throw new Error('Falha ao registrar atividade.');
-        }
+        if (!response.ok) throw new Error('Falha ao registrar.');
 
         alert('Atividade registrada com sucesso!');
         form.reset();
 
+        // Atualiza stats do usuário
         const resLogin = await fetch('/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: usuarioLogado.email, senha: usuarioLogado.senha })
         });
-
         if (resLogin.ok) {
             usuarioLogado = await resLogin.json();
             atualizarInterfaceUsuario();
         }
-
         carregarMinhasAtividades();
 
     } catch (erro) {
@@ -633,16 +621,16 @@ async function handleRegistroAtividade(e) {
 }
 
 function criarCardAtividade(atividade) {
-
     const distKM = (atividade.distancia_percorrida / 1000).toFixed(2);
     const duracaoFormatada = formatarDuracao(atividade.duracao_atividade);
     const dataFormatada = formatarData(atividade.createdAt || atividade.createdat);
 
-    const autor = atividade.usuario_id;
-    const nomeUsuario = autor && autor.nome_usuario ? autor.nome_usuario : (atividade.nome_usuario_rel || 'Desconhecido');
-    const imagemUsuario = autor && autor.imagem ? autor.imagem : (atividade.imagem_rel || 'SAEPSaude.png');
+    // Tratamento de nulos
+    const autor = atividade.usuario_id || {};
+    const nomeUsuario = autor.nome_usuario || 'Desconhecido';
+    const imagemUsuario = autor.imagem || 'SAEPSaude.png';
     
-    // Verifica se o usuário atual curtiu
+    // Verifica like (seguro contra tipos string/number)
     const usuarioCurtiu = usuarioLogado &&
         atividade.usuariosQueCurtiram &&
         atividade.usuariosQueCurtiram.some(id => Number(id) === Number(usuarioLogado.id));
@@ -694,27 +682,16 @@ function criarCardAtividade(atividade) {
 function formatarDuracao(totalMinutos) {
     const horas = Math.floor(totalMinutos / 60);
     const minutos = totalMinutos % 60;
-
-    if (horas === 0) {
-        return `${minutos}min`;
-    }
-
-    if (minutos === 0) {
-        return `${horas}h`;
-    }
-
+    if (horas === 0) return `${minutos}min`;
+    if (minutos === 0) return `${horas}h`;
     return `${horas}h ${minutos}min`;
 }
 
 function formatarData(isoString) {
     if (!isoString) return '';
     const data = new Date(isoString);
-
     return data.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
     });
 }
