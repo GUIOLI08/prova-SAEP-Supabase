@@ -108,7 +108,7 @@ body {
 
 .activity-registration-container {
     background-color: var(--branco);
-    border: 1px solid var(--cinza); /* Borda cinza conforme a imagem */
+    border: 1px solid var(--cinza); 
     border-top: none;
     border-radius: 0 0 8px 8px;
     padding: 20px;
@@ -125,12 +125,12 @@ body {
 
 .form-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Duas colunas iguais */
-    gap: 15px 20px; /* Espaçamento vertical e horizontal */
+    grid-template-columns: 1fr 1fr;
+    gap: 15px 20px;
 }
 
 .form-grid .form-group {
-    margin-bottom: 0; /* Remove margem padrão para usar o gap do grid */
+    margin-bottom: 0;
 }
 
 .form-grid label {
@@ -151,7 +151,7 @@ body {
 }
 
 .btn-black {
-    background-color: #333333; /* Cor escura conforme imagem */
+    background-color: #333333;
     color: white;
     padding: 10px 20px;
     border-radius: 5px;
@@ -229,7 +229,6 @@ body {
     background-color: #f0f0f0;
 }
 
-/* Seção de comentários */
 .comment-form {
     margin-top: 15px;
     padding-top: 15px;
@@ -525,10 +524,9 @@ body {
 }
 
 .input-error {
-    border: 2px solid #ff4d4d !important; /* Vermelho forte */
+    border: 2px solid #ff4d4d !important;
 }
 
-/* Classe para o texto de erro embaixo */
 .error-message {
     color: #ff4d4d;
     font-size: 0.85rem;
