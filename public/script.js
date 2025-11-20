@@ -87,7 +87,7 @@ function configurarLogin() {
 
                 if (!response.ok) {
                     mostrarErro(emailInput, '');
-                    mostrarErro(senhaInput, 'E-mail ou senha incorretos.');
+                    mostrarErro(senhaInput, 'E-mail ou senha incorretos.'); 
                     return;
                 }
 
@@ -225,6 +225,8 @@ function atualizarInterfaceUsuario() {
 async function renderizarMainAtividades(pagina = 1) {
     if (!mainContent) return;
 
+    const paginaNum = parseInt(pagina);
+
     const btnAtividade = document.getElementById('open-registro-btn');
     if (btnAtividade) {
         btnAtividade.classList.remove('atividade-ativo');
@@ -280,7 +282,7 @@ async function renderizarMainAtividades(pagina = 1) {
             });
         }
 
-        renderizarPaginacao(totalPaginas, pagina);
+        renderizarPaginacao(totalPaginas, paginaNum);
 
     } catch (error) {
         console.error("Erro ao carregar atividades:", error);
@@ -613,7 +615,7 @@ async function handleRegistroAtividade(e) {
         return; 
     }
 
-    const tipoFormatado = tipoTexto.charAt(0).toUpperCase() + tipoTexto.slice(1).toLowerCase();
+    const tipoFormatado = tipoTexto.charAt(0).toLowerCase() + tipoTexto.slice(1).toLowerCase();
 
     const novaAtividade = {
         tipo_atividade: tipoFormatado,
