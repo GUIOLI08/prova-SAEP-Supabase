@@ -247,7 +247,7 @@ function atualizarInterfaceUsuario() {
         const openRegistroBtn = document.getElementById('open-registro-btn');
         if (openRegistroBtn) {
             openRegistroBtn.addEventListener('click', () => {
-                openRegistroBtn.classList.add('atividade-ativo')
+                openRegistroBtn.classList.add('atividade-ativo');
                 renderizarMainGerenciamento();
             });
         }
@@ -636,8 +636,13 @@ async function renderizarMainGerenciamento() {
 
 // Busca apenas as atividades do PRÓPRIO usuário para mostrar no histórico pessoal
 async function carregarMinhasAtividades() {
+
+    const openRegistroBtn = document.getElementById('open-registro-btn');
     const listaDiv = document.getElementById('minhas-atividades-lista');
+
     if (!listaDiv || !usuarioLogado) return;
+
+    openRegistroBtn.classList.add('atividade-ativo');
 
     const usuarioId = usuarioLogado.id;
 
@@ -738,7 +743,7 @@ async function handleRegistroAtividade(e) {
             usuarioLogado = await resLogin.json();
             atualizarInterfaceUsuario();
         }
-        carregarMinhasAtividades(); // Atualiza a lista abaixo
+        carregarMinhasAtividades();
 
     } catch (erro) {
         console.error(erro);
