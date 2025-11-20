@@ -491,40 +491,41 @@ async function renderizarMainGerenciamento() {
     if (!usuarioLogado) return renderizarMainAtividades(1);
     if (!mainContent) return;
 
-    // Nota: Aqui o header é fixo para Gerenciamento
+    // Header fixo da página de gerenciamento
     mainContent.innerHTML = `
         <header class="main-header">
             <h2>Gerenciamento de Atividades</h2>
             <button id="login-button" class="login-button logout-button">Logout</button>
         </header>
 
-        <div id="cadastro-container">
-            <h3>Registrar Nova Atividade</h3>
-            <form id="atividade-form" class="form-page">
-                <div class="form-row">
+        <div class="activity-registration-container">
+            <h3>Crie sua atividade</h3>
+            
+            <form id="atividade-form">
+                <div class="form-grid">
                     <div class="form-group">
-                        <label for="tipo_atividade_form">Tipo</label>
-                        <select id="tipo_atividade_form" required>
-                            <option value="corrida">Corrida</option>
-                            <option value="caminhada">Caminhada</option>
-                            <option value="trilha">Trilha</option>
-                        </select>
+                        <label for="tipo_atividade_form">Tipo da atividade</label>
+                        <input type="text" id="tipo_atividade_form" placeholder="Ex: Caminhada" required>
                     </div>
+
                     <div class="form-group">
-                        <label for="distancia_form">Distância (m)</label>
-                        <input type="number" id="distancia_form" min="1" required>
+                        <label for="distancia_form">Distância percorrida</label>
+                        <input type="text" id="distancia_form" placeholder="Ex: 1000 metros" required>
                     </div>
+
                     <div class="form-group">
-                        <label for="duracao_form">Duração (min)</label>
-                        <input type="number" id="duracao_form" min="1" required>
+                        <label for="duracao_form">Duração da atividade</label>
+                        <input type="text" id="duracao_form" placeholder="Ex: 120 min" required>
                     </div>
+
                     <div class="form-group">
-                        <label for="calorias_form">Calorias</label>
-                        <input type="number" id="calorias_form" min="1" required>
+                        <label for="calorias_form">Quantidade de Calorias</label>
+                        <input type="text" id="calorias_form" placeholder="Ex: 300" required>
                     </div>
                 </div>
-                <div class="form-actions-full">
-                    <button type="submit" class="submit-btn" style="width: 100%;">Registrar</button>
+
+                <div class="form-footer-right">
+                    <button type="submit" class="btn-black">Criar Atividade</button>
                 </div>
             </form>
         </div>
@@ -535,7 +536,7 @@ async function renderizarMainGerenciamento() {
         </div>
     `;
 
-    configurarLogin();
+    configurarLogin(); // Reconecta o botão de logout
 
     const atividadeForm = document.getElementById('atividade-form');
     if (atividadeForm) {
@@ -582,11 +583,33 @@ async function handleRegistroAtividade(e) {
     }
 
     const form = e.target;
+    
+    // 1. Captura e Limpeza dos dados
+    // .trim() remove espaços em branco antes e depois
+    const tipoTexto = form.tipo_atividade_form.value.trim();
+    
+    // Limpa 'metros' ou 'min' caso o usuário digite no campo numérico (ex: "1000 metros" -> "1000")
+    const distanciaTexto = form.distancia_form.value.replace(/\D/g, ""); 
+    const duracaoTexto = form.duracao_form.value.replace(/\D/g, "");
+    const caloriasTexto = form.calorias_form.value.replace(/\D/g, "");
+
+    // 2. Validação do Tipo de Atividade (Case Insensitive)
+    const tiposPermitidos = ['corrida', 'caminhada', 'trilha'];
+    
+    // Convertemos para minúsculo para comparar
+    if (!tiposPermitidos.includes(tipoTexto.toLowerCase())) {
+        alert('Tipo de atividade inválido! Por favor digite apenas: Corrida, Caminhada ou Trilha.');
+        return; 
+    }
+
+    // Mantém a formatação bonita (Primeira letra maiúscula) para salvar no banco
+    const tipoFormatado = tipoTexto.charAt(0).toUpperCase() + tipoTexto.slice(1).toLowerCase();
+
     const novaAtividade = {
-        tipo_atividade: form.tipo_atividade_form.value,
-        distancia_percorrida: form.distancia_form.value,
-        duracao_atividade: form.duracao_form.value,
-        quantidade_calorias: form.calorias_form.value,
+        tipo_atividade: tipoFormatado,
+        distancia_percorrida: parseInt(distanciaTexto),
+        duracao_atividade: parseInt(duracaoTexto),
+        quantidade_calorias: parseInt(caloriasTexto),
         usuario_id: usuarioLogado.id
     };
 
@@ -602,7 +625,7 @@ async function handleRegistroAtividade(e) {
         alert('Atividade registrada com sucesso!');
         form.reset();
 
-        // Atualiza stats do usuário
+        // Atualiza stats do usuário na sessão local
         const resLogin = await fetch('/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
