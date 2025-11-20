@@ -98,6 +98,10 @@ body {
     text-align: center;
 }
 
+.activity-title{
+    text-align: center;
+}
+
 .activity-card {
     background-color: var(--branco);
     border: 1px solid var(--cinza);

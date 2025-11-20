@@ -1,7 +1,6 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-// Certifique-se que este arquivo exporta o client inicializado com a SERVICE ROLE KEY
 import supabase from './supabaseClient.js'; 
 
 const app = express();
@@ -10,25 +9,17 @@ const PORT = 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middleware padrão
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ----------------------------------------------------------------------
-// ROTA PRINCIPAL (Serve o HTML)
-// ----------------------------------------------------------------------
 app.get('/', (req, res) => {
     console.log('➡️\t Entrando na rota principal');
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ----------------------------------------------------------------------
-// 🚀 ROTA DE ATIVIDADES (COM FILTROS E OTIMIZADA)
-// ----------------------------------------------------------------------
 app.get('/atividades', async (req, res) => {
     const pagina = parseInt(req.query.pagina) || 1;
-    // 🚨 NOVO: Captura o tipo do filtro da URL (ex: ?tipo=corrida)
     const filtroTipo = req.query.tipo; 
 
     const itensPorPagina = 4;
@@ -38,7 +29,6 @@ app.get('/atividades', async (req, res) => {
     console.log(`➡️\t Buscando atividades (Pág ${pagina} | Filtro: ${filtroTipo || 'Todos'})`);
 
     try {
-        // 1. INICIA A QUERY BÁSICA
         let query = supabase
             .from('atividades')
             .select(`
@@ -48,13 +38,10 @@ app.get('/atividades', async (req, res) => {
                 comments ( id )
             `, { count: 'exact' });
 
-        // 2. APLICA O FILTRO SE ELE EXISTIR
-        // Só aplica se for um dos tipos válidos do banco
         if (filtroTipo && ['corrida', 'caminhada', 'trilha'].includes(filtroTipo)) {
             query = query.eq('tipo_atividade', filtroTipo);
         }
 
-        // 3. FINALIZA A QUERY (ORDENAÇÃO E PAGINAÇÃO)
         const { data, count, error } = await query
             .order('createdat', { ascending: false })
             .range(from, to);
@@ -64,7 +51,6 @@ app.get('/atividades', async (req, res) => {
             return res.status(500).send(error);
         }
 
-        // 4. FORMATA OS DADOS (Igual antes)
         const atividadesFormatadas = data.map(item => {
             const likesArray = item.likes || [];
             const commentsArray = item.comments || [];
@@ -92,9 +78,6 @@ app.get('/atividades', async (req, res) => {
     }
 });
 
-// ----------------------------------------------------------------------
-// REGISTRO DE ATIVIDADE
-// ----------------------------------------------------------------------
 app.post('/atividades', async (req, res) => {
     const { tipo_atividade, distancia_percorrida, duracao_atividade, quantidade_calorias, usuario_id } = req.body;
 
@@ -121,14 +104,10 @@ app.post('/atividades', async (req, res) => {
     res.status(201).json({ mensagem: "Atividade registrada com sucesso!" });
 });
 
-// ----------------------------------------------------------------------
-// LOGIN
-// ----------------------------------------------------------------------
 app.post('/login', async (req, res) => {
     const { email, senha } = req.body;
     console.log(`➡️\t Login: ${email}`);
 
-    // 1. Verifica credenciais
     const { data: usuario, error } = await supabase
         .from('usuarios')
         .select('*')
@@ -140,13 +119,11 @@ app.post('/login', async (req, res) => {
         return res.status(401).json({ erro: "Email ou senha inválidos" });
     }
 
-    // 2. Busca estatísticas (Contagem rápida)
     const { count: totalAtividades } = await supabase
         .from('atividades')
         .select('*', { count: 'exact', head: true })
         .eq('usuario_id', usuario.id);
 
-    // 3. Soma de calorias (precisa de query simples)
     const { data: caloriasData } = await supabase
         .from('atividades')
         .select('quantidade_calorias')
@@ -165,9 +142,6 @@ app.post('/login', async (req, res) => {
     });
 });
 
-// ----------------------------------------------------------------------
-// 🚀 ROTA MINHAS ATIVIDADES (OTIMIZADA)
-// ----------------------------------------------------------------------
 app.get('/minhas-atividades', async (req, res) => {
     const usuarioId = req.query.usuarioId;
 
@@ -193,7 +167,7 @@ app.get('/minhas-atividades', async (req, res) => {
 
             return {
                 ...item,
-                usuario_id: item.usuario, // Ajusta estrutura para o frontend
+                usuario_id: item.usuario,
                 usuariosQueCurtiram: likesArray.map(l => l.usuario_id),
                 totalLikes: likesArray.length,
                 totalComentarios: commentsArray.length,
@@ -209,9 +183,6 @@ app.get('/minhas-atividades', async (req, res) => {
     }
 });
 
-// ----------------------------------------------------------------------
-// TOGGLE LIKE (ADICIONAR / REMOVER)
-// ----------------------------------------------------------------------
 app.post('/atividades/:id/like', async (req, res) => {
     const atividadeId = req.params.id;
     const { usuarioId } = req.body;
@@ -219,7 +190,6 @@ app.post('/atividades/:id/like', async (req, res) => {
     if (!usuarioId) return res.status(400).json({ erro: "ID do usuário obrigatório" });
 
     try {
-        // Tenta deletar direto. Se retornar dado, é porque existia e deletou.
         const { data: deleted, error: deleteError } = await supabase
             .from('likes')
             .delete()
@@ -230,10 +200,8 @@ app.post('/atividades/:id/like', async (req, res) => {
         if (deleteError) throw deleteError;
 
         if (deleted && deleted.length > 0) {
-            // Se deletou algo, retorna que removeu
             return res.status(200).json({ acao: 'removido' });
         } else {
-            // Se não deletou nada, é porque não existia, então INSERE
             const { error: insertError } = await supabase
                 .from('likes')
                 .insert([{ usuario_id: usuarioId, atividade_id: atividadeId }]);
@@ -248,7 +216,6 @@ app.post('/atividades/:id/like', async (req, res) => {
     }
 });
 
-// Rota Auxiliar de Likes (caso precise atualizar contador via fetch isolado)
 app.get('/atividades/:id/likes', async (req, res) => {
     try {
         const { data } = await supabase
@@ -265,9 +232,6 @@ app.get('/atividades/:id/likes', async (req, res) => {
     }
 });
 
-// ----------------------------------------------------------------------
-// COMENTÁRIOS (ADICIONAR E LISTAR)
-// ----------------------------------------------------------------------
 app.post('/atividades/:id/comentarios', async (req, res) => {
     const { usuarioId, conteudo } = req.body;
 
@@ -316,12 +280,11 @@ app.get('/atividades/:id/comentarios', async (req, res) => {
     }
 });
 
-// Rota de teste
 app.get('/testar-db', async (req, res) => {
     const { data, error } = await supabase.from('usuarios').select('*').limit(1);
     return error ? res.status(500).send(error) : res.status(200).send(data);
 });
 
 app.listen(PORT, () => {
-    console.log(`🔥 Server VOANDO na porta ${PORT}`);
+    console.log(`Server is running in http://localhost:${PORT}`);
 });
