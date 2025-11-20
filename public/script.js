@@ -106,8 +106,8 @@ function atualizarInterfaceUsuario() {
 
     if (usuarioLogado) {
         if (btnLoginHeader) {
-            btnLoginHeader.innerText = "Sair";
-            btnLoginHeader.style.backgroundColor = "#d9534f";
+            btnLoginHeader.innerText = "Logout";
+            btnLoginHeader.style.backgroundColor = "var(--cinza)";
         }
 
         sidebarContainer.innerHTML = `
@@ -196,7 +196,7 @@ async function renderizarMainAtividades(pagina = 1) {
     mainContent.innerHTML = `
         <header class="main-header">
             <h2>Atividades Recentes</h2>
-            <button id="login-button">${usuarioLogado ? 'Sair' : 'Login'}</button>
+            <button id="login-button">${usuarioLogado ? 'Logout' : 'Login'}</button>
         </header>
 
         <div class="filters">
@@ -398,6 +398,10 @@ async function enviarComentario(atividadeId) {
     const textarea = document.getElementById(`comment-input-${atividadeId}`);
     const conteudo = textarea.value.trim();
 
+    if(!conteudo){
+        alert('Não é possível enviar um comentário vazio.');
+        return
+    }
     if (conteudo.length <= 2) {
         alert('Comentário deve ter mais de 2 caracteres');
         return;
