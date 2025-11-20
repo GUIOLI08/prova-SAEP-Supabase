@@ -31,10 +31,10 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
     background-color: var(--cinza);
     padding: 20px;
     width: 20%;
+    gap: 2rem;
 }
 
 .profile-card {
@@ -108,8 +108,9 @@ body {
 
 .activity-registration-container {
     background-color: var(--branco);
-    border: 1px solid #aaa; /* Borda cinza conforme a imagem */
-    border-radius: 8px;
+    border: 1px solid var(--cinza); /* Borda cinza conforme a imagem */
+    border-top: none;
+    border-radius: 0 0 8px 8px;
     padding: 20px;
     margin-bottom: 30px;
     color: var(--cinza);
@@ -330,16 +331,16 @@ body {
 }
 
 .main-footer {
-    position: relative;
-    border-top: 2px solid var(--cinza);
+    margin-top: auto;
+    border-top: 2px solid var(--branco);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: #FFFFFF;
     text-align: center;
-    padding: 25px;
-    width: 100%;
+    padding: 25px 25px 0 25px;
+    width: 383px;
 }
 
 .footer-icons {
@@ -357,7 +358,7 @@ body {
 
 .main-footer p {
     font-size: 0.8rem;
-    color: var(--cinza);
+    color: var(--branco);
     margin: 0;
 }
 
@@ -489,4 +490,36 @@ body {
     background-color: #483DAD;
     color: white;
     border-color: #483DAD;
+}
+
+.atividade-btn{
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--branco);
+    width: 383px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid var(--branco);
+    border-top: 2px solid var(--branco);
+    padding: 1rem 1rem;
+    font-size: 1.17rem;
+    gap: 40px;
+}
+
+#progresso{
+    width: 40px;
+    height: 40px;
+    color: blue;
+    fill: blue;
+    border-radius: 0;
+    border: none;
+}
+
+.atividade-ativo{
+    background-color: var(--roxo);
+}
+
+#logo-header-btn-sidebar{
+    cursor: pointer;
 }

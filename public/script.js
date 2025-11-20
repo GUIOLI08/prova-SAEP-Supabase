@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function configurarListenerLogo() {
     const logoButton = document.getElementById('logo-header-btn');
     if (logoButton) {
-        // Clona para remover listeners antigos e evitar duplicidade
         const novoLogo = logoButton.cloneNode(true);
         logoButton.parentNode.replaceChild(novoLogo, logoButton);
         
@@ -140,7 +139,6 @@ function atualizarInterfaceUsuario() {
             <div class="profile-card">
                 <img src="./images/${usuarioLogado.imagem}" alt="Avatar" id="logo-header-btn-sidebar">
                 <h3>@${usuarioLogado.nome_usuario}</h3>
-                <p>${usuarioLogado.nome || ''}</p> 
 
                 <div class="profile-stats">
                     <div class="stat-item">
@@ -152,11 +150,11 @@ function atualizarInterfaceUsuario() {
                         <strong>${usuarioLogado.stats.totalCalorias}</strong>
                     </div>
                 </div>
-                
-                <button id="open-registro-btn" class="submit-btn" style="margin-top: 20px;">
-                    Registrar Atividade
-                </button>
             </div>
+            <button id="open-registro-btn" class="atividade-btn" style="margin-top: 20px;">
+                    <img src="./images/progresso.svg" id="progresso" alt="Progresso">
+                    Atividade
+                </button>
             <footer class="main-footer">
                 <span>SAEPSaúde</span>
                 <div class="footer-icons">
@@ -175,6 +173,7 @@ function atualizarInterfaceUsuario() {
         const openRegistroBtn = document.getElementById('open-registro-btn');
         if (openRegistroBtn) {
             openRegistroBtn.addEventListener('click', () => {
+                openRegistroBtn.classList.add('atividade-ativo')
                 renderizarMainGerenciamento();
             });
         }
@@ -212,6 +211,11 @@ function atualizarInterfaceUsuario() {
 async function renderizarMainAtividades(pagina = 1) {
     if (!mainContent) return;
 
+    const btnAtividade = document.getElementById('open-registro-btn');
+    if (btnAtividade) {
+        btnAtividade.classList.remove('atividade-ativo');
+    }
+
     // Helper para definir a classe 'active'
     const getClass = (tipo) => filtroAtual === tipo ? 'active' : '';
 
@@ -228,7 +232,7 @@ async function renderizarMainAtividades(pagina = 1) {
         </div>
         
         <section id="activity-list" class="feed-list">
-            <p style="text-align:center; padding:20px; color:#888;">Carregando...</p>
+            <p style="text-align:center; padding:60px; color:#888;">Carregando atividades...</p>
         </section>
         <div id="pagination-controls" class="pagination-container"></div>
     `;
@@ -532,7 +536,7 @@ async function renderizarMainGerenciamento() {
 
         <h3>Minhas Atividades Registradas</h3>
         <div id="minhas-atividades-lista">
-            <p>Carregando suas atividades...</p>
+            <p style="text-align:center; padding:60px; color:#888;">Carregando suas atividades...</p>
         </div>
     `;
 
