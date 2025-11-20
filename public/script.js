@@ -107,6 +107,7 @@ function atualizarInterfaceUsuario() {
     if (usuarioLogado) {
         if (btnLoginHeader) {
             btnLoginHeader.innerText = "Logout";
+            btnLoginHeader.classList.add('logout-button');
             btnLoginHeader.style.backgroundColor = "var(--cinza)";
         }
 
@@ -196,7 +197,7 @@ async function renderizarMainAtividades(pagina = 1) {
     mainContent.innerHTML = `
         <header class="main-header">
             <h2>Atividades Recentes</h2>
-            <button id="login-button">${usuarioLogado ? 'Logout' : 'Login'}</button>
+            <button id="login-button" class="${ usuarioLogado ? 'login-button logout-button' : 'login-button'}">${usuarioLogado ? 'Logout' : 'Login'}</button>
         </header>
 
         <div class="filters">
@@ -484,7 +485,7 @@ async function renderizarMainGerenciamento() {
     mainContent.innerHTML = `
         <header class="main-header">
             <h2>Gerenciamento de Atividades</h2>
-            <button id="login-button">Sair</button>
+            <button id="login-button" class="login-button logout-button">Logout</button>
         </header>
 
         <div id="cadastro-container">
